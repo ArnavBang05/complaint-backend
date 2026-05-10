@@ -9,7 +9,11 @@ exports.createComplaint = async (req, res) => {
       return res.status(400).json({ message: "All fields required" })
     }
 
-    const image = req.file ? req.file.path : ""
+    let image = ""
+
+    if (req.file && req.file.path) {
+      image = req.file.path
+    }
 
     const complaint = await Complaint.create({
       user: req.user.id,
@@ -24,9 +28,9 @@ exports.createComplaint = async (req, res) => {
     res.status(201).json(complaint)
 
   } catch (error) {
-  console.error("CREATE ERROR:", error)
-  res.status(500).json({ message: error.message })
-}
+    console.error("CREATE ERROR:", error)
+    res.status(500).json({ message: error.message || "Server error" })
+  }
 }
 
 // GET MY
