@@ -17,7 +17,6 @@ const complaintSchema = mongoose.Schema({
     required: true
   },
 
-  // 🔥 NEW FEATURES
   image: {
     type: String,
     default: ""

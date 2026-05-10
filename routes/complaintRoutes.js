@@ -10,8 +10,8 @@ const {
 } = require("../controllers/complaintController")
 
 const protect = require("../middleware/authMiddleware")
+const upload = require("../middleware/upload")
 
-// 🔒 Admin middleware (SAFE VERSION)
 const adminOnly = (req, res, next) => {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ message: "Admin access only ❌" })
@@ -19,14 +19,11 @@ const adminOnly = (req, res, next) => {
   next()
 }
 
-// ================== STUDENT ==================
-router.post("/create", protect, createComplaint)
-router.get("/my", protect, getMyComplaints)
+router.post("/create", protect, upload.single("image"), createComplaint)
 
-// ================== ADMIN ==================
+router.get("/my", protect, getMyComplaints)
 router.get("/all", protect, adminOnly, getAllComplaints)
 
-// ================== COMMON ==================
 router.put("/:id", protect, updateComplaint)
 router.delete("/:id", protect, deleteComplaint)
 

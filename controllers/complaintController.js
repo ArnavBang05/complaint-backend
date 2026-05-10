@@ -1,6 +1,6 @@
 const Complaint = require("../models/Complaint")
 
-// ================= CREATE =================
+// CREATE
 exports.createComplaint = async (req, res) => {
   try {
     const { title, description, category, priority } = req.body
@@ -9,13 +9,15 @@ exports.createComplaint = async (req, res) => {
       return res.status(400).json({ message: "All fields required" })
     }
 
+    const image = req.file ? req.file.path : ""
+
     const complaint = await Complaint.create({
       user: req.user.id,
       title,
       description,
       category: category || "Other",
       priority: priority || "Medium",
-      image: "", // will use later
+      image,
       status: "pending"
     })
 
@@ -27,19 +29,19 @@ exports.createComplaint = async (req, res) => {
   }
 }
 
-// ================= GET MY =================
+// GET MY
 exports.getMyComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find({ user: req.user.id })
       .sort({ createdAt: -1 })
 
     res.json(complaints)
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Error fetching complaints" })
   }
 }
 
-// ================= GET ALL =================
+// GET ALL
 exports.getAllComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find()
@@ -47,13 +49,12 @@ exports.getAllComplaints = async (req, res) => {
       .sort({ createdAt: -1 })
 
     res.json(complaints)
-
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
 }
 
-// ================= UPDATE =================
+// UPDATE
 exports.updateComplaint = async (req, res) => {
   try {
     const { status } = req.body
@@ -71,22 +72,17 @@ exports.updateComplaint = async (req, res) => {
       return res.status(401).json({ message: "Not authorized" })
     }
 
-    if (status && !["pending", "resolved"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" })
-    }
-
     complaint.status = status || complaint.status
 
     const updated = await complaint.save()
     res.json(updated)
 
-  } catch (err) {
-    console.log(err)
+  } catch {
     res.status(500).json({ message: "Error updating complaint" })
   }
 }
 
-// ================= DELETE =================
+// DELETE
 exports.deleteComplaint = async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id)
@@ -106,8 +102,7 @@ exports.deleteComplaint = async (req, res) => {
 
     res.json({ message: "Deleted successfully" })
 
-  } catch (err) {
-    console.log(err)
+  } catch {
     res.status(500).json({ message: "Error deleting complaint" })
   }
 }
