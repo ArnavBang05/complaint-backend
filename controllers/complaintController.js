@@ -1,0 +1,108 @@
+const Complaint = require("../models/Complaint")
+
+// ================= CREATE =================
+exports.createComplaint = async (req, res) => {
+  try {
+    const { title, description } = req.body
+
+    if (!title || !description) {
+      return res.status(400).json({ message: "All fields required" })
+    }
+
+    const complaint = await Complaint.create({
+      user: req.user.id,
+      title,
+      description,
+      status: "pending"
+    })
+
+    res.status(201).json(complaint)
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Error creating complaint" })
+  }
+}
+
+// ================= GET MY =================
+exports.getMyComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ user: req.user.id })
+    res.json(complaints)
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching complaints" })
+  }
+}
+
+// ================= GET ALL =================
+exports.getAllComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find()
+      .populate("user", "name email")
+
+    res.json(complaints)
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// ================= UPDATE =================
+exports.updateComplaint = async (req, res) => {
+  try {
+    const { status } = req.body
+
+    const complaint = await Complaint.findById(req.params.id)
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Not found" })
+    }
+
+    // 🔥 SAFE CHECK
+    const isOwner = complaint.user.toString() === req.user.id
+    const isAdmin = req.user.role === "admin"
+
+    if (!isOwner && !isAdmin) {
+      return res.status(401).json({ message: "Not authorized" })
+    }
+
+    if (status && !["pending", "resolved"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" })
+    }
+
+    complaint.status = status || complaint.status
+
+    const updated = await complaint.save()
+    res.json(updated)
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ message: "Error updating complaint" })
+  }
+}
+
+// ================= DELETE =================
+exports.deleteComplaint = async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id)
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Not found" })
+    }
+
+    const isOwner = complaint.user.toString() === req.user.id
+    const isAdmin = req.user.role === "admin"
+
+    if (!isOwner && !isAdmin) {
+      return res.status(401).json({ message: "Not authorized" })
+    }
+
+    await complaint.deleteOne()
+
+    res.json({ message: "Deleted successfully" })
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ message: "Error deleting complaint" })
+  }
+}
