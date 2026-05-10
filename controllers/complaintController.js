@@ -3,7 +3,7 @@ const Complaint = require("../models/Complaint")
 // ================= CREATE =================
 exports.createComplaint = async (req, res) => {
   try {
-    const { title, description } = req.body
+    const { title, description, category, priority } = req.body
 
     if (!title || !description) {
       return res.status(400).json({ message: "All fields required" })
@@ -13,6 +13,9 @@ exports.createComplaint = async (req, res) => {
       user: req.user.id,
       title,
       description,
+      category: category || "Other",
+      priority: priority || "Medium",
+      image: "", // will use later
       status: "pending"
     })
 
@@ -28,6 +31,8 @@ exports.createComplaint = async (req, res) => {
 exports.getMyComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+
     res.json(complaints)
   } catch (error) {
     res.status(500).json({ message: "Error fetching complaints" })
@@ -39,6 +44,7 @@ exports.getAllComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find()
       .populate("user", "name email")
+      .sort({ createdAt: -1 })
 
     res.json(complaints)
 
@@ -58,7 +64,6 @@ exports.updateComplaint = async (req, res) => {
       return res.status(404).json({ message: "Not found" })
     }
 
-    // 🔥 SAFE CHECK
     const isOwner = complaint.user.toString() === req.user.id
     const isAdmin = req.user.role === "admin"
 
