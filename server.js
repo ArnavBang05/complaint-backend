@@ -29,8 +29,11 @@ app.get("/", (req, res) => {
 })
 
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err.message)
-  res.status(500).json({ message: "Server Error" })
+  console.error("🔥 FULL ERROR:", err)
+  res.status(500).json({
+    message: err.message || "Server Error",
+    error: err
+  })
 })
 
 const PORT = process.env.PORT || 5001

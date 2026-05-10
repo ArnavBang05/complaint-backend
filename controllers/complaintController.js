@@ -24,9 +24,9 @@ exports.createComplaint = async (req, res) => {
     res.status(201).json(complaint)
 
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ message: "Error creating complaint" })
-  }
+  console.error("CREATE ERROR:", error)
+  res.status(500).json({ message: error.message })
+}
 }
 
 // GET MY
